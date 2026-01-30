@@ -7,114 +7,91 @@ import {
 import { HelpCircle } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
-const FAQSection = () => {
-  const { ref, isVisible } = useScrollAnimation();
+const faqItems = [
+  {
+    question: "Cos'è il Conto Termico 3.0?",
+    answer: "Il Conto Termico 3.0 è un meccanismo di incentivazione statale che promuove l'efficienza energetica e la produzione di energia termica da fonti rinnovabili. Permette di ottenere un contributo diretto (non una detrazione fiscale) per l'installazione di pompe di calore, caldaie a biomassa, solare termico e altri interventi di efficientamento energetico.",
+  },
+  {
+    question: "Quali impianti sono ammessi agli incentivi?",
+    answer: "Sono ammessi: pompe di calore (aria/aria, aria/acqua, acqua/acqua, geotermiche), caldaie a biomassa, solare termico, scaldacqua a pompa di calore, sistemi ibridi e interventi di isolamento termico dell'edificio. L'impianto deve rispettare requisiti minimi di efficienza stabiliti dal GSE.",
+  },
+  {
+    question: "Come viene calcolato l'incentivo?",
+    answer: "L'incentivo viene calcolato in base alla potenza termica dell'impianto (kW), alla zona climatica dell'edificio (da A a F), al tipo di tecnologia installata e ad eventuali bonus (come la sostituzione di un vecchio impianto). Il contributo può coprire fino al 65% della spesa sostenuta.",
+  },
+  {
+    question: "Quali documenti servono per la domanda?",
+    answer: "Servono: fatture e bonifici dell'intervento, asseverazione di un tecnico abilitato, schede tecniche dell'impianto, certificazione del produttore, eventuale APE (Attestato di Prestazione Energetica) e documentazione fotografica dell'installazione. Noi ti supportiamo nella raccolta di tutta la documentazione.",
+  },
+  {
+    question: "In quanto tempo ricevo l'incentivo?",
+    answer: "Dopo la presentazione della domanda al GSE (Gestore dei Servizi Energetici), i tempi medi di erogazione sono di 60-90 giorni per gli interventi di piccole dimensioni. Per incentivi superiori a €5.000, l'importo può essere erogato in rate annuali (2-5 anni a seconda dell'importo).",
+  },
+  {
+    question: "Posso cumulare il Conto Termico con altre agevolazioni?",
+    answer: "Il Conto Termico NON è cumulabile con le detrazioni fiscali (Ecobonus, Bonus Casa) sullo stesso intervento. È però cumulabile con altri incentivi pubblici di natura non fiscale, a condizione che la somma non superi il 100% della spesa sostenuta.",
+  },
+  {
+    question: "Chi può accedere agli incentivi?",
+    answer: "Possono accedere: privati cittadini, condomini, imprese, enti pubblici, cooperative di abitanti e società di servizi energetici (ESCo). L'immobile deve essere esistente e dotato di impianto di climatizzazione.",
+  },
+  {
+    question: "Perché affidarsi a un consulente energetico?",
+    answer: "Un consulente esperto garantisce: corretta valutazione dell'intervento, massimizzazione dell'incentivo ottenibile, gestione completa della pratica GSE, supporto nella scelta dell'impianto più adatto e assistenza in caso di controlli. La nostra esperienza di 15+ anni ci permette di avere un tasso di successo del 98% sulle pratiche presentate.",
+  },
+];
 
-  const faqs = [
-    {
-      question: "Cos'è il Conto Termico 3.0?",
-      answer: "Il Conto Termico 3.0, regolato dal D.M. 7 agosto 2025, è un meccanismo di incentivazione per interventi di efficientamento energetico e produzione di energia termica da fonti rinnovabili. Prevede rimborsi fino al 65% della spesa sostenuta per l'installazione di pompe di calore, caldaie a biomassa, impianti solari termici e altri interventi.",
-    },
-    {
-      question: 'Chi può accedere agli incentivi?',
-      answer: "Possono accedere al Conto Termico 3.0: privati cittadini, condomini, imprese, Pubbliche Amministrazioni, cooperative di abitanti, enti del terzo settore. Gli interventi devono essere realizzati su edifici esistenti o in costruzione, nel rispetto dei requisiti tecnici previsti dal decreto.",
-    },
-    {
-      question: 'Quali interventi sono incentivabili?',
-      answer: "Gli interventi incentivabili includono: sostituzione di impianti di climatizzazione con pompe di calore, installazione di caldaie a biomassa, impianti solari termici, sistemi ibridi, scaldacqua a pompa di calore, building automation. Ogni tipologia ha coefficienti di calcolo specifici.",
-    },
-    {
-      question: "Come si calcola l'incentivo?",
-      answer: "L'incentivo si calcola con la formula: Ia,tot = Ei × Ci, dove Ei è l'energia incentivata (dipendente dalla potenza dell'impianto, dalla zona climatica e dallo SCOP) e Ci è il coefficiente di valorizzazione specifico per ogni tecnologia. Il nostro calcolatore applica automaticamente tutte le formule del decreto.",
-    },
-    {
-      question: 'Quanto tempo ci vuole per ottenere il rimborso?',
-      answer: "I tempi di erogazione dipendono dall'importo dell'incentivo: per importi fino a 5.000€ l'erogazione è in un'unica rata entro 90 giorni dall'approvazione; per importi superiori viene suddiviso in rate annuali (da 2 a 5 anni). Il GSE ha 90 giorni per valutare la pratica dalla data di presentazione.",
-    },
-    {
-      question: 'Posso cumulare il Conto Termico con altre agevolazioni?',
-      answer: "Il Conto Termico 3.0 è cumulabile con altri incentivi (es. bonus fiscali) nel limite del 100% della spesa sostenuta. Non è cumulabile con altri incentivi statali per lo stesso intervento sullo stesso impianto. È importante verificare la compatibilità caso per caso.",
-    },
-    {
-      question: 'Quali documenti sono necessari?',
-      answer: "I documenti principali includono: scheda tecnica dell'impianto installato, fatture e bonifici, asseverazione del tecnico abilitato, documentazione fotografica, APE pre e post intervento (se richiesto), contratto con l'installatore. Il nostro servizio include la preparazione completa della documentazione.",
-    },
-    {
-      question: 'Come funziona il vostro servizio di consulenza?',
-      answer: "Il nostro servizio prevede: 1) Consulenza gratuita iniziale per valutare l'intervento, 2) Calcolo preciso dell'incentivo spettante, 3) Preparazione completa della documentazione, 4) Invio della pratica al GSE, 5) Monitoraggio fino all'erogazione. Lavoriamo a success fee: paghi solo a incentivo ottenuto.",
-    },
-  ];
+export function FAQSection() {
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: contentRef, isVisible: contentVisible } = useScrollAnimation();
 
   return (
-    <section id="faq" className="section-padding">
-      <div className="container-custom">
+    <section id="faq" className="py-20 lg:py-32 bg-background relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-1/2 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Section Header */}
         <div
-          ref={ref}
-          className={`transition-all duration-700 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-          }`}
+          ref={headerRef}
+          className={`text-center mb-12 lg:mb-16 animate-on-scroll ${headerVisible ? 'visible' : ''}`}
         >
-          {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
-              FAQ
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">
-              Domande <span className="text-gradient">Frequenti</span>
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Trova le risposte alle domande più comuni sul Conto Termico 3.0 
-              e sul nostro servizio di consulenza.
-            </p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-medium mb-4">
+            <HelpCircle className="w-4 h-4" />
+            Domande Frequenti
           </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            Tutto sul <span className="gradient-text">Conto Termico</span>
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Le risposte alle domande più comuni sui nostri servizi e sugli incentivi per le pompe di calore.
+          </p>
+        </div>
 
-          {/* FAQ Accordion */}
-          <div className="max-w-3xl mx-auto">
-            <Accordion type="single" collapsible className="space-y-4">
-              {faqs.map((faq, index) => (
-                <AccordionItem
-                  key={index}
-                  value={`item-${index}`}
-                  className="glass rounded-2xl px-6 border-none"
-                >
-                  <AccordionTrigger className="text-left hover:no-underline py-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <HelpCircle className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-semibold text-base pr-4">
-                        {faq.question}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-6 pl-12 text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
-
-          {/* CTA */}
-          <div className="text-center mt-12">
-            <p className="text-muted-foreground mb-4">
-              Non hai trovato la risposta che cercavi?
-            </p>
-            <a
-              href="#footer"
-              className="text-primary font-semibold hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Contattaci direttamente →
-            </a>
-          </div>
+        {/* FAQ Accordion */}
+        <div
+          ref={contentRef}
+          className={`max-w-3xl mx-auto animate-on-scroll ${contentVisible ? 'visible' : ''}`}
+        >
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqItems.map((item, index) => (
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className="border-0 rounded-xl bg-card shadow-md hover-lift overflow-hidden"
+              >
+                <AccordionTrigger className="px-6 py-5 text-left hover:no-underline hover:bg-muted/50 transition-colors">
+                  <span className="font-semibold text-foreground pr-4">{item.question}</span>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-5 text-muted-foreground leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>
   );
-};
-
-export default FAQSection;
+}

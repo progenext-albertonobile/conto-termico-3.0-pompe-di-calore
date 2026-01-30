@@ -5,10 +5,10 @@ interface WhatsAppButtonProps {
   message?: string;
 }
 
-const WhatsAppButton = ({ 
-  phoneNumber = '390123456789', 
-  message = 'Ciao! Vorrei informazioni sul Conto Termico 3.0' 
-}: WhatsAppButtonProps) => {
+export function WhatsAppButton({ 
+  phoneNumber = '393401234567', 
+  message = 'Ciao! Vorrei informazioni sugli incentivi Conto Termico 3.0.' 
+}: WhatsAppButtonProps) {
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
@@ -25,18 +25,18 @@ const WhatsAppButton = ({
         <div className="absolute inset-0 rounded-full bg-success animate-ping opacity-25" />
         
         {/* Button */}
-        <div className="relative w-14 h-14 bg-success rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300">
-          <MessageCircle className="w-7 h-7 text-success-foreground fill-current" />
+        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-success flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300">
+          <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-success-foreground" />
         </div>
-        
+
         {/* Tooltip */}
-        <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg pointer-events-none">
-          Scrivici su WhatsApp
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 bg-foreground rotate-45" />
+        <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg">
+            Chatta con noi!
+            <div className="absolute top-full right-6 border-8 border-transparent border-t-foreground" />
+          </div>
         </div>
       </div>
     </a>
   );
-};
-
-export default WhatsAppButton;
+}

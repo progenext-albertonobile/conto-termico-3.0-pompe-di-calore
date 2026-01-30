@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// Hook for scroll-triggered animations
-export const useScrollAnimation = <T extends HTMLElement = HTMLDivElement>(
-  threshold = 0.1,
-  rootMargin = '0px'
-) => {
+interface UseScrollAnimationOptions {
+  threshold?: number;
+  rootMargin?: string;
+  triggerOnce?: boolean;
+}
+
+export function useScrollAnimation<T extends HTMLElement = HTMLDivElement>(
+  options: UseScrollAnimationOptions = {}
+) {
+  const { threshold = 0.1, rootMargin = '0px', triggerOnce = true } = options;
   const ref = useRef<T>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -16,7 +21,11 @@ export const useScrollAnimation = <T extends HTMLElement = HTMLDivElement>(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(element);
+          if (triggerOnce) {
+            observer.unobserve(element);
+          }
+        } else if (!triggerOnce) {
+          setIsVisible(false);
         }
       },
       { threshold, rootMargin }
@@ -25,37 +34,38 @@ export const useScrollAnimation = <T extends HTMLElement = HTMLDivElement>(
     observer.observe(element);
 
     return () => {
-      observer.disconnect();
+      observer.unobserve(element);
     };
-  }, [threshold, rootMargin]);
+  }, [threshold, rootMargin, triggerOnce]);
 
   return { ref, isVisible };
-};
+}
 
-// Hook for counting up animation
-export const useCountUp = (
+export function useCountUp(
   end: number,
   duration: number = 2000,
   startOnVisible: boolean = true
-) => {
+) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const { ref, isVisible } = useScrollAnimation<HTMLSpanElement>();
 
-  const startCounting = useCallback(() => {
+  useEffect(() => {
+    if (startOnVisible && !isVisible) return;
     if (hasStarted) return;
-    setHasStarted(true);
 
-    const startTime = performance.now();
+    setHasStarted(true);
+    const startTime = Date.now();
     const startValue = 0;
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      const currentValue = Math.floor(startValue + (end - startValue) * easeOutQuart);
+      // Easing function (ease-out)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.floor(startValue + (end - startValue) * easeOut);
       
       setCount(currentValue);
 
@@ -65,81 +75,7 @@ export const useCountUp = (
     };
 
     requestAnimationFrame(animate);
-  }, [end, duration, hasStarted]);
+  }, [end, duration, isVisible, startOnVisible, hasStarted]);
 
-  useEffect(() => {
-    if (startOnVisible && isVisible) {
-      startCounting();
-    }
-  }, [isVisible, startCounting, startOnVisible]);
-
-  return { count, ref, isVisible, startCounting };
-};
-
-// Hook for staggered animations
-export const useStaggerAnimation = (
-  itemCount: number,
-  staggerDelay: number = 100
-) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [visibleItems, setVisibleItems] = useState<boolean[]>(
-    Array(itemCount).fill(false)
-  );
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Stagger the visibility of each item
-          for (let i = 0; i < itemCount; i++) {
-            setTimeout(() => {
-              setVisibleItems((prev) => {
-                const next = [...prev];
-                next[i] = true;
-                return next;
-              });
-            }, i * staggerDelay);
-          }
-          observer.unobserve(container);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(container);
-
-    return () => observer.disconnect();
-  }, [itemCount, staggerDelay]);
-
-  return { containerRef, visibleItems };
-};
-
-// Hook for parallax effect
-export const useParallax = (speed: number = 0.5) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!ref.current) return;
-      
-      const rect = ref.current.getBoundingClientRect();
-      const scrollProgress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-      const newOffset = (scrollProgress - 0.5) * 100 * speed;
-      
-      setOffset(newOffset);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [speed]);
-
-  return { ref, offset };
-};
-
-export default useScrollAnimation;
+  return { count, ref, isVisible };
+}

@@ -1,156 +1,137 @@
-import { Zap, Mail, Phone, MapPin, Linkedin, Facebook, Instagram } from 'lucide-react';
+import { Zap, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
 
-const Footer = () => {
+const footerLinks = [
+  { label: 'Calcola Incentivo', href: '#calculator' },
+  { label: 'Chi Siamo', href: '#about' },
+  { label: 'FAQ', href: '#faq' },
+  { label: 'Contatti', href: '#contact' },
+];
+
+export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
+  const handleNavClick = (href: string) => {
+    const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <footer id="footer" className="bg-foreground text-background">
-      <div className="container-custom py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+    <footer id="contact" className="bg-foreground text-background py-16">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 gradient-hero rounded-lg flex items-center justify-center">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center">
                 <Zap className="w-6 h-6 text-primary-foreground" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg text-background leading-tight">
-                  Conto Termico
-                </span>
-                <span className="text-xs text-primary font-semibold">3.0</span>
-              </div>
+              <span className="font-bold text-xl">
+                <span className="text-primary">Energia</span>
+                <span>Futuro</span>
+              </span>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Consulenza specializzata per l'accesso agli incentivi del Conto Termico 3.0. 
-              Ti accompagniamo in ogni fase del processo.
+            <p className="text-background/70 max-w-md mb-6">
+              Consulenza energetica specializzata per massimizzare i tuoi incentivi Conto Termico 3.0. 
+              Dalla progettazione all'ottenimento del contributo, ti accompagniamo in ogni fase.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary transition-colors"
+                href="https://www.linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
                 aria-label="LinkedIn"
               >
-                <Linkedin className="w-5 h-5" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
               </a>
               <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary transition-colors"
+                href="https://www.facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-lg bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
                 aria-label="Facebook"
               >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full bg-muted/20 flex items-center justify-center hover:bg-primary transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
               </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Link Utili</h4>
+            <h4 className="font-bold text-lg mb-4">Link Utili</h4>
             <ul className="space-y-3">
-              {[
-                { label: 'Home', id: 'hero' },
-                { label: 'Calcolatore Incentivi', id: 'calculator' },
-                { label: 'Chi Siamo', id: 'about' },
-                { label: 'FAQ', id: 'faq' },
-              ].map((item) => (
-                <li key={item.id}>
+              {footerLinks.map((link) => (
+                <li key={link.href}>
                   <button
-                    onClick={() => scrollToSection(item.id)}
-                    className="text-muted-foreground hover:text-background transition-colors text-sm"
+                    onClick={() => handleNavClick(link.href)}
+                    className="text-background/70 hover:text-primary transition-colors"
                   >
-                    {item.label}
+                    {link.label}
                   </button>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h4 className="font-semibold text-lg mb-4">Servizi</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>Consulenza Conto Termico</li>
-              <li>Pratiche GSE</li>
-              <li>Diagnosi Energetiche</li>
-              <li>Progettazione Impianti</li>
-              <li>Assistenza Tecnica</li>
+              <li>
+                <a
+                  href="https://www.gse.it/servizi-per-te/efficienza-energetica/conto-termico"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-background/70 hover:text-primary transition-colors inline-flex items-center gap-1"
+                >
+                  Sito GSE <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Contatti</h4>
+            <h4 className="font-bold text-lg mb-4">Contatti</h4>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Email</p>
-                  <a
-                    href="mailto:info@contotermico30.it"
-                    className="text-background hover:text-primary transition-colors"
-                  >
-                    info@contotermico30.it
-                  </a>
-                </div>
+              <li className="flex items-start gap-3 text-background/70">
+                <MapPin className="w-5 h-5 shrink-0 mt-0.5 text-primary" />
+                <span>Via dell'Energia 123<br />00100 Roma (RM)</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Telefono</p>
-                  <a
-                    href="tel:+390123456789"
-                    className="text-background hover:text-primary transition-colors"
-                  >
-                    +39 012 345 6789
-                  </a>
-                </div>
+              <li>
+                <a
+                  href="tel:+390612345678"
+                  className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors"
+                >
+                  <Phone className="w-5 h-5 shrink-0 text-primary" />
+                  +39 06 1234 5678
+                </a>
               </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Sede</p>
-                  <p className="text-background">
-                    Via Roma 123, 00100 Roma (RM)
-                  </p>
-                </div>
+              <li>
+                <a
+                  href="mailto:info@energiafuturo.it"
+                  className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors"
+                >
+                  <Mail className="w-5 h-5 shrink-0 text-primary" />
+                  info@energiafuturo.it
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-muted/20">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <p>© {currentYear} Conto Termico 3.0. Tutti i diritti riservati.</p>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-background transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-background transition-colors">
-                Cookie Policy
-              </a>
-              <a href="#" className="hover:text-background transition-colors">
-                Termini e Condizioni
-              </a>
-            </div>
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-background/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-background/50">
+          <p>© {currentYear} EnergiaFuturo. Tutti i diritti riservati.</p>
+          <div className="flex gap-6">
+            <a href="/privacy" className="hover:text-background transition-colors">
+              Privacy Policy
+            </a>
+            <a href="/cookie" className="hover:text-background transition-colors">
+              Cookie Policy
+            </a>
           </div>
         </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}

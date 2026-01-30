@@ -1,112 +1,107 @@
 import { useState } from 'react';
-import { X, Download, Mail, Loader2, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Download, CheckCircle2, Loader2, Mail, FileText, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 interface LeadModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const LeadModal = ({ isOpen, onClose }: LeadModalProps) => {
+export function LeadModal({ isOpen, onClose }: LeadModalProps) {
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !email.includes('@')) {
-      toast.error('Inserisci un indirizzo email valido');
+      toast({
+        title: 'Email non valida',
+        description: 'Per favore inserisci un indirizzo email valido.',
+        variant: 'destructive',
+      });
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
       const { error } = await supabase
         .from('leads')
-        .insert([{ email, source: 'guide_download' }]);
+        .insert({ email, source: 'pdf_guide' });
 
       if (error) throw error;
 
       setIsSuccess(true);
-      toast.success('Grazie! Controlla la tua email per scaricare la guida.');
-      
-      // Reset after delay
-      setTimeout(() => {
-        setEmail('');
-        setIsSuccess(false);
-        onClose();
-      }, 3000);
+      toast({
+        title: 'Email registrata!',
+        description: 'Riceverai la guida nella tua casella di posta.',
+      });
     } catch (error) {
       console.error('Error saving lead:', error);
-      toast.error('Si è verificato un errore. Riprova più tardi.');
+      toast({
+        title: 'Errore',
+        description: 'Si è verificato un errore. Riprova più tardi.',
+        variant: 'destructive',
+      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  const handleClose = () => {
+    setEmail('');
+    setIsSuccess(false);
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-md glass rounded-3xl p-8 animate-scale-in">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
-          aria-label="Chiudi"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
         {!isSuccess ? (
           <>
-            {/* Icon */}
-            <div className="w-16 h-16 gradient-hero rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Download className="w-8 h-8 text-primary-foreground" />
-            </div>
-
-            {/* Content */}
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2">
-                Scarica la Guida Gratuita
-              </h3>
-              <p className="text-muted-foreground">
-                Ricevi la nostra guida completa al Conto Termico 3.0 con tutti 
-                i dettagli sugli incentivi e le procedure.
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="La tua email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-12 rounded-xl"
-                  required
-                />
+            <DialogHeader className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-2xl gradient-hero flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-primary-foreground" />
               </div>
+              <DialogTitle className="text-2xl">Guida Gratuita Conto Termico 3.0</DialogTitle>
+              <DialogDescription className="text-base mt-2">
+                Scarica la guida completa con tutti i dettagli sugli incentivi, i requisiti e le procedure.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Il tuo indirizzo email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="nome@email.it"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 py-6"
+                    required
+                  />
+                </div>
+              </div>
+
               <Button
                 type="submit"
-                className="w-full h-12 gradient-hero text-primary-foreground shadow-bold"
-                disabled={isLoading}
+                className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
+                disabled={isSubmitting}
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Invio in corso...
@@ -114,36 +109,48 @@ const LeadModal = ({ isOpen, onClose }: LeadModalProps) => {
                 ) : (
                   <>
                     <Download className="w-5 h-5 mr-2" />
-                    Scarica la Guida
+                    Scarica la Guida Gratuita
                   </>
                 )}
               </Button>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Shield className="w-4 h-4" />
+                <span>I tuoi dati sono al sicuro. Niente spam, promesso.</span>
+              </div>
             </form>
 
-            {/* Privacy */}
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Inserendo la tua email accetti la nostra{' '}
-              <a href="#" className="text-primary hover:underline">
-                Privacy Policy
-              </a>
-              . Non invieremo spam.
-            </p>
+            {/* Benefits */}
+            <div className="mt-6 pt-6 border-t space-y-3">
+              <p className="text-sm font-medium text-foreground">Cosa troverai nella guida:</p>
+              {[
+                'Tutti i requisiti per accedere agli incentivi',
+                'Tabelle con i valori degli incentivi per zona',
+                'Checklist documenti necessari',
+                'Tempistiche e modalità di erogazione',
+              ].map((benefit, index) => (
+                <div key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                  <span>{benefit}</span>
+                </div>
+              ))}
+            </div>
           </>
         ) : (
-          /* Success State */
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-success" />
+          <div className="text-center py-6">
+            <div className="mx-auto w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Grazie!</h3>
-            <p className="text-muted-foreground">
-              Controlla la tua casella email per scaricare la guida.
-            </p>
+            <DialogTitle className="text-2xl mb-2">Perfetto!</DialogTitle>
+            <DialogDescription className="text-base mb-6">
+              Abbiamo inviato la guida al tuo indirizzo email. Controlla la tua casella di posta (anche lo spam!).
+            </DialogDescription>
+            <Button onClick={handleClose} className="gradient-hero text-primary-foreground">
+              Chiudi
+            </Button>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default LeadModal;
+}

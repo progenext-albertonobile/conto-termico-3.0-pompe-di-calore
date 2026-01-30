@@ -1,119 +1,246 @@
 
-# Piano di Integrazione - Conto Termico 3.0
 
-## Panoramica del Progetto
-Il progetto "Conto Termico 3.0" e un sito web completo per consulenza energetica che include:
-- Landing page con sezioni Hero, About, FAQ, Footer
-- Calcolatore incentivi Conto Termico 3.0 (D.M. 7 agosto 2025)
-- Integrazione Supabase per raccolta lead
-- Bottone WhatsApp flottante
-- Modal per download guida PDF
-- Animazioni scroll-triggered
+# Calculator Corrections Plan
 
-## Struttura File da Creare
+## Overview
+Complete overhaul of the calculator to match the original HTML calculator faithfully, including the proper formula from D.M. 7 agosto 2025 (Conto Termico 3.0).
 
-### 1. Componenti Principali (src/components/)
-| File | Descrizione |
-|------|-------------|
-| Header.tsx | Navbar responsive con menu mobile, scroll effect glass |
-| HeroSection.tsx | Sezione hero con statistiche animate, CTAs |
-| AboutSection.tsx | Team, valori, statistiche aziendali |
-| FAQSection.tsx | Accordion FAQ sul Conto Termico |
-| Footer.tsx | Footer con contatti, social, link utili |
-| LeadModal.tsx | Modal per raccolta email e download guida |
-| WhatsAppButton.tsx | Bottone flottante WhatsApp |
+---
 
-### 2. Componenti Calculator (src/components/Calculator/)
-| File | Descrizione |
-|------|-------------|
-| CalculatorSection.tsx | UI del calcolatore con form e risultati |
-| calculatorData.ts | Dati: tipi pompe calore, zone climatiche, province, formule calcolo |
+## Changes Required
 
-### 3. Hooks Custom (src/hooks/)
-| File | Descrizione |
-|------|-------------|
-| useScrollAnimation.ts | Hook per animazioni scroll-triggered + useCountUp |
+### 1. Potenza Termica - FREE NUMBER INPUT
 
-### 4. Integrazione Supabase (src/integrations/supabase/)
-| File | Descrizione |
-|------|-------------|
-| client.ts | Client Supabase configurato |
-| types.ts | Tipi TypeScript per tabella "leads" |
+**Current:** Dropdown with fixed options
+**Required:** Free text input field for any kW value
 
-### 5. Pagine (src/pages/)
-| File | Descrizione |
-|------|-------------|
-| Index.tsx | Pagina principale che compone tutte le sezioni |
+- Replace `Select` component with `Input` component (type="number")
+- Add validation for reasonable range (e.g., 1-1000 kW)
+- Show indicator badge: "> 35 kW" or "≤ 35 kW" based on input value
+- Affects Ci coefficient selection and number of payment installments (2 vs 5)
 
-### 6. Stili e Configurazione
-| File | Descrizione |
-|------|-------------|
-| src/index.css | Design system completo con variabili CSS, gradienti, animazioni |
-| tailwind.config.ts | Configurazione Tailwind estesa con animazioni custom |
+---
 
-## Ordine di Implementazione
+### 2. Provincia Default - Bologna
 
-### Fase 1: Design System
-1. Aggiornare `src/index.css` con il design system completo (colori bold, gradienti, glass effects, animazioni)
-2. Aggiornare `tailwind.config.ts` con colori success, animazioni custom, font Inter
+**Current:** Default is "Roma"
+**Required:** Default should be "Bologna"
 
-### Fase 2: Hooks e Utilities
-3. Creare `src/hooks/useScrollAnimation.ts` (animazioni scroll + contatori)
+- Change initial state from `"Roma"` to `"Bologna"`
 
-### Fase 3: Integrazione Supabase
-4. Creare `src/integrations/supabase/client.ts`
-5. Creare `src/integrations/supabase/types.ts`
-6. Nota: sara necessario connettere Supabase e creare la tabella "leads"
+---
 
-### Fase 4: Componenti Base
-7. Creare `src/components/Header.tsx`
-8. Creare `src/components/Footer.tsx`
-9. Creare `src/components/WhatsAppButton.tsx`
+### 3. Remove Climate Descriptions
 
-### Fase 5: Sezioni Landing
-10. Creare `src/components/HeroSection.tsx`
-11. Creare `src/components/AboutSection.tsx`
-12. Creare `src/components/FAQSection.tsx`
-13. Creare `src/components/LeadModal.tsx`
+**Current:** Zone descriptions include "Clima freddo", "Clima molto freddo", etc.
+**Required:** Remove all "Clima" references from zone descriptions
 
-### Fase 6: Calcolatore
-14. Creare `src/components/Calculator/calculatorData.ts` (dati e logica)
-15. Creare `src/components/Calculator/CalculatorSection.tsx` (UI)
+- Update `climateZones` array to have neutral descriptions or just show examples
+- Keep zone letter (A, B, C, D, E, F) and examples visible
 
-### Fase 7: Pagina Principale
-16. Aggiornare `src/pages/Index.tsx` per assemblare tutti i componenti
+---
 
-## Dettagli Tecnici
+### 4. Tipo di Pompa di Calore - Faithful to Original
 
-### Design System (index.css)
-- Palette: Electric Blue (#0078D4) + Teal (#00A79D) + Orange accent (#F59E0B)
-- Variabili CSS HSL per light/dark mode
-- Classi utility: `gradient-hero`, `gradient-accent`, `gradient-text`, `glass`, `shadow-bold`, `hover-lift`
-- Animazioni: `animate-on-scroll`, `pulse-glow`, `float`, `animate-count-up`
+**Current:** Button cards with custom types and fixed Ci values
+**Required:** Dropdown matching original HTML with dynamic Ci based on power
 
-### Calcolatore Incentivi
-Formula basata su D.M. 7 agosto 2025:
-- Qu = Prated x Quf (calore totale)
-- Ei = Qu x (1 - 1/SCOP) x kp (energia incentivata)
-- Ia,tot = Ei x Ci (incentivo annuo)
-- I,tot = Ia,tot x Annualita (incentivo totale)
+Based on the official table (Tabella 9 - Allegato 2 - D.M. 7 agosto 2025):
 
-Include:
-- 10 tipi di pompe di calore con coefficienti Ci
-- 6 zone climatiche (A-F) con Quf
-- 107 province italiane mappate a zone
-- Calcolo automatico kp (premialita)
+| Tipo | Power Range | Ci (euro/kWht) |
+|------|-------------|----------------|
+| Split/Multisplit (aria/aria) | ≤ 12 kW | 0.070 |
+| Fixed double duct (aria/aria) | ≤ 12 kW | 0.200 |
+| VRF/VRV (aria/aria) | 12-35 kW | 0.150 |
+| VRF/VRV (aria/aria) | > 35 kW | 0.055 |
+| Rooftop (aria/aria) | ≤ 35 kW | 0.150 |
+| Rooftop (aria/aria) | > 35 kW | 0.055 |
+| Aria/Acqua | ≤ 35 kW | 0.150 |
+| Aria/Acqua | > 35 kW | 0.060 |
+| PdC ad acqua di falda/aria | ≤ 35 kW | 0.160 |
+| PdC ad acqua di falda/aria | > 35 kW | 0.060 |
+| Acqua/Acqua (PdC ad acqua di falda) | ≤ 35 kW | 0.160 |
+| Acqua/Acqua (PdC ad acqua di falda) | > 35 kW | 0.060 |
+| Geotermica suolo/acqua circuito chiuso | ≤ 35 kW | 0.160 |
+| Geotermica suolo/acqua circuito chiuso | > 35 kW | 0.060 |
+| Salamoia/Acqua (geotermica) | ≤ 35 kW | 0.160 |
+| Salamoia/Acqua (geotermica) | > 35 kW | 0.060 |
 
-### Integrazione Supabase
-- Tabella `leads` con campi: id, email, source, created_at
-- Usata nel LeadModal per salvare email utenti
+---
 
-## Note Importanti
-1. **Supabase**: Dopo l'implementazione, sara necessario attivare Supabase e creare la tabella "leads"
-2. **WhatsApp**: Il numero di telefono nel WhatsAppButton e un placeholder da aggiornare
-3. **Immagini Team**: Usano immagini Unsplash (placeholder)
-4. **Font Inter**: Gia disponibile via system fonts
+### 5. Add Missing Input Fields
 
-## File Totali da Creare/Modificare
-- **Nuovi file**: 12
-- **File da modificare**: 3 (index.css, tailwind.config.ts, Index.tsx)
+The original calculator has additional technical inputs:
+
+1. **SCOP (da scheda tecnica)** - Seasonal Coefficient of Performance
+   - Number input with decimal
+   - Default: 3.68 (example)
+
+2. **ηs effettivo (% da scheda tecnica)** - Actual seasonal efficiency
+   - Number input (percentage)
+   - Default: 115%
+
+3. **ηs min Ecodesign (%)** - Auto-calculated based on pump type
+   - Read-only field, auto-updated
+
+---
+
+### 6. Update Calculation Formula
+
+Implement the correct Conto Termico 3.0 formula:
+
+```text
+1. Quf = Zone coefficient from Tab. 8 All. 2
+   (Zone A: 600, B: 850, C: 1100, D: 1400, E: 1700, F: 1800)
+
+2. Qu = Prated x Quf (Total heat produced)
+
+3. kp = ηs / ηs,min (Premium coefficient, capped at limit)
+
+4. Ei = Qu x (1 - 1/SCOP) x kp (Incentivized thermal energy)
+
+5. Ci = Coefficient from Tab. 9 based on pump type + power
+
+6. Ia,tot = Ei x Ci (Annual incentive in euro)
+
+7. Annualita = 2 (if ≤35kW) or 5 (if >35kW)
+
+8. I,tot = Ia,tot x Annualita (Total incentive)
+```
+
+---
+
+### 7. Update Results Display
+
+Match original layout with sections:
+
+**INCENTIVI Section:**
+- Incentivo Totale (X annualita)
+- Incentivo Annuo (Ia,tot)
+- Calore totale (Qu) in kWht
+- Energia incentivata (Ei) in kWht
+
+**FATTORI E COEFFICIENTI Section:**
+- Quf value with description
+- Ci value with description
+- kp value with description
+- SCOP min with description
+- ηs min with description
+- Annualita with explanation
+
+**DETTAGLIO CALCOLI Section (optional/collapsible):**
+- Step-by-step formula breakdown showing all calculations
+
+---
+
+## Files to Modify
+
+### `src/components/Calculator/calculatorData.ts`
+
+- Redefine `HeatPumpType` interface with power-based Ci lookup
+- Add `getHeatPumpCi(pumpTypeId, powerKw)` function
+- Update Quf values for climate zones (Tab. 8)
+- Add SCOP min and ηs min values per pump type
+- Remove "Clima freddo" descriptions from zones
+- Remove `powerOptions` array (no longer needed)
+
+### `src/components/Calculator/CalculatorSection.tsx`
+
+- Change province default to "Bologna"
+- Replace power dropdown with number input
+- Replace pump type cards with dropdown
+- Add SCOP and ηs inputs
+- Update calculation display to match original
+- Add power threshold indicator badge
+
+---
+
+## Technical Details
+
+### New Heat Pump Types Structure
+
+```typescript
+interface HeatPumpType {
+  id: string;
+  name: string;
+  regulation: string; // EU regulation reference
+  environment: string; // esterno/interno type
+  commercialName: string;
+  ciRanges: { maxPower: number; ci: number }[];
+  scopMin: number;
+  etaMin: number;
+}
+```
+
+### Zone Quf Values (Tab. 8 All. 2)
+
+| Zone | Quf (kWht) |
+|------|------------|
+| A | 600 |
+| B | 850 |
+| C | 1100 |
+| D | 1400 |
+| E | 1700 |
+| F | 1800 |
+
+---
+
+## UI Layout (Matching Original)
+
+```text
++------------------------------------------+
+|           DATI IMPIANTO                   |
+|-------------------------------------------|
+| Tipo di Pompa di Calore  [Dropdown    v] |
+|                                           |
+| Provincia                [Bologna     v] |
+| Zona Climatica: Zona E (auto)            |
+|                                           |
+| Potenza Prated (kW)  [____] > 35 kW      |
+|                                           |
+| SCOP (da scheda)     |  ηs min Ecodesign |
+| [3.68           ]    |  [110        ] %  |
+|                                           |
+| ηs effettivo (%)                          |
+| [115            ]                         |
++------------------------------------------+
+
++------------------------------------------+
+|              INCENTIVI                    |
+|-------------------------------------------|
+|  INCENTIVO TOTALE (5 annualita)          |
+|        156.871,36 euro                    |
+|-------------------------------------------|
+|  Incentivo Annuo     |   31.374,27 /anno |
+|  Calore totale (Qu)  |   686.800 kWht    |
+|  Energia (Ei)        |   522.904,55 kWht |
++------------------------------------------+
+
++------------------------------------------+
+|        FATTORI E COEFFICIENTI             |
+|-------------------------------------------|
+|  Quf    | 1700  | Coeff. zona climatica  |
+|  Ci     | 0.060 | Coeff. valorizzazione  |
+|  kp     | 1.045 | Coeff. premialita      |
+|  SCOP min| 2.825 | SCOP minimo Ecodesign |
+|  ηs min | 110%  | Eff. stagionale min    |
+|  Annualita | 5  | >35kW: 5 rate          |
++------------------------------------------+
+```
+
+---
+
+## Summary of Changes
+
+| Item | Current | After |
+|------|---------|-------|
+| Potenza Termica | Dropdown (fixed options) | Free number input |
+| Default Provincia | Roma | Bologna |
+| Zone descriptions | "Clima freddo" etc. | Neutral (just examples) |
+| Pump type selection | Button cards | Dropdown |
+| Pump types | Custom 5 types | Official 9+ types from Tabella 9 |
+| Ci coefficient | Fixed per pump | Dynamic based on power threshold |
+| Additional inputs | None | SCOP, ηs effettivo, ηs min |
+| Calculation formula | Simplified | Full D.M. 7 agosto 2025 formula |
+| Results display | Basic breakdown | Full technical breakdown |
+
