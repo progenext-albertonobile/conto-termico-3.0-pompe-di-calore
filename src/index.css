@@ -296,3 +296,13 @@
     animation: countUp 0.6s ease-out forwards;
   }
 }
+
+@layer utilities {
+  .footer-spacing {
+    @apply py-8;
+  }
+
+  .footer-grid-spacing {
+    @apply mb-8;
+  }
+}

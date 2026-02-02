@@ -14,6 +14,10 @@ export default {
     },
     extend: {
       colors: {
+        progenext: {
+          teal: "#00c1bc",
+          dark: "#2a2a2d",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
