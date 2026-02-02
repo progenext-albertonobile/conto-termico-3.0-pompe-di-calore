@@ -99,30 +99,36 @@ export function Footer() {
               <li>
                 <a
                   href="tel:+390514984199"
-                  className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors"
+                  className="group flex items-center gap-3 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
                 >
                   <Phone className="w-5 h-5 shrink-0 text-primary" />
-                  +39 051 498 4199
-                              <li>
-                                <a
-                                  href="https://wa.me/393518134091"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors"
-                                >
-                                  <MessageCircle className="w-5 h-5 shrink-0 text-primary" />
-                                  WhatsApp: +39 351 813 4091
-                                </a>
-                              </li>
+                  <span className="whitespace-nowrap text-background/70 group-hover:text-primary">
+                    +39 051 498 4199
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://wa.me/393518134091"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+                >
+                  <MessageCircle className="w-5 h-5 shrink-0 text-primary" />
+                  <span className="whitespace-nowrap text-background/70 group-hover:text-primary">
+                    WhatsApp: +39 351 813 4091
+                  </span>
                 </a>
               </li>
               <li>
                 <a
                   href="mailto:contotermico@progenext.it"
-                  className="flex items-center gap-3 text-background/70 hover:text-primary transition-colors"
+                  className="group flex items-center gap-3 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
                 >
                   <Mail className="w-5 h-5 shrink-0 text-primary" />
-                  contotermico@progenext.it
+                  <span className="text-background/70 group-hover:text-primary">
+                    contotermico@progenext.it
+                  </span>
                 </a>
               </li>
             </ul>
