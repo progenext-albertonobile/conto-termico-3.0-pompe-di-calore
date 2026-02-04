@@ -15,6 +15,8 @@ export default {
     extend: {
       colors: {
         progenext: {
+          white: "#ffffff",
+          black: "#2a2a2d",
           teal: "#00c1bc",
           dark: "#2a2a2d",
         },
@@ -72,7 +74,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ["Roboto", "ui-sans-serif", "system-ui"],
         display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       keyframes: {

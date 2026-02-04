@@ -290,10 +290,16 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 {/* CTA */}
                 <div className="space-y-3 pt-4">
                   <Button
-                    onClick={onOpenLeadModal}
+                    asChild
                     className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
                   >
-                    Scarica la Guida Completa
+                    <a
+                      href="/downloads/PROGENEXT_Conto_Termico_30_Guida.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Scarica la Guida Gratuita (PDF)
+                    </a>
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     *Stima indicativa basata su D.M. 7 agosto 2025. Il calcolo definitivo dipende dalla valutazione tecnica.
