@@ -15,6 +15,13 @@ export interface HeatPumpType {
   etaMin: number; // Minimum ηs for Ecodesign (percentage)
 }
 
+export interface PumpApplicationRequirements {
+  application: 'DEFAULT' | 'MEDIUM_TEMPERATURE_55C' | 'LOW_TEMPERATURE_35C';
+  scopLabel: string;
+  scopMin: number;
+  etaMin: number;
+}
+
 export const heatPumpTypes: HeatPumpType[] = [
   {
     id: 'split-aria-aria',
@@ -128,6 +135,38 @@ export const heatPumpTypes: HeatPumpType[] = [
     etaMin: 125,
   },
 ];
+
+const AIR_WATER_ELECTRIC_ID = 'aria-acqua';
+
+export function getPumpApplicationRequirements(
+  pumpType: HeatPumpType,
+  isLowTemp35: boolean
+): PumpApplicationRequirements {
+  if (pumpType.id !== AIR_WATER_ELECTRIC_ID) {
+    return {
+      application: 'DEFAULT',
+      scopLabel: 'SCOP (da scheda tecnica)',
+      scopMin: pumpType.scopMin,
+      etaMin: pumpType.etaMin,
+    };
+  }
+
+  if (isLowTemp35) {
+    return {
+      application: 'LOW_TEMPERATURE_35C',
+      scopLabel: 'SCOP (35°C – clima average)',
+      scopMin: 3.2,
+      etaMin: 125,
+    };
+  }
+
+  return {
+    application: 'MEDIUM_TEMPERATURE_55C',
+    scopLabel: 'SCOP (55°C – clima average)',
+    scopMin: 2.825,
+    etaMin: 110,
+  };
+}
 
 // Get Ci coefficient based on pump type and power
 export function getHeatPumpCi(pumpType: HeatPumpType, powerKw: number): number {
@@ -335,7 +374,8 @@ export function calculateIncentive(
   zone: ClimateZone,
   powerKw: number,
   scop: number,
-  etaEffective: number
+  etaEffective: number,
+  requirements?: Pick<PumpApplicationRequirements, 'scopMin' | 'etaMin'>
 ): IncentiveResult {
   // Get Quf from zone (Tab. 8)
   const quf = zone.quf;
@@ -344,8 +384,8 @@ export function calculateIncentive(
   const qu = powerKw * quf;
   
   // Get minimum values from pump type
-  const scopMin = pumpType.scopMin;
-  const etaMin = pumpType.etaMin;
+  const scopMin = requirements?.scopMin ?? pumpType.scopMin;
+  const etaMin = requirements?.etaMin ?? pumpType.etaMin;
   
   // Calculate kp = ηs / ηs,min (premium coefficient)
   const kp = etaEffective / etaMin;

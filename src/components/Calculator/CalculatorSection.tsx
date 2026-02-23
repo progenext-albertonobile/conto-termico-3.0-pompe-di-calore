@@ -5,7 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Calculator, Info, TrendingUp, Euro, MapPin, ChevronDown, Zap } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import {
@@ -13,13 +15,17 @@ import {
   climateZones,
   provinces,
   getZoneByProvince,
+  getPumpApplicationRequirements,
   calculateIncentive,
-  type HeatPumpType
 } from './calculatorData';
 
 interface CalculatorSectionProps {
   onOpenLeadModal: () => void;
 }
+
+const AIR_WATER_ELECTRIC_ID = 'aria-acqua';
+const SCOP_TOOLTIP_TEXT =
+  'Inserisci lo SCOP "clima average" dalla scheda tecnica del produttore. Radiatori/Ventilconvettori -> 55C (lascia la spunta OFF). Pavimento radiante -> 35C (spunta ON).';
 
 export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
   const [selectedPumpId, setSelectedPumpId] = useState<string>(heatPumpTypes[4].id); // Default: Aria/Acqua
@@ -27,23 +33,53 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
   const [powerKw, setPowerKw] = useState<number | ''>('');
   const [scop, setScop] = useState<number | ''>('');
   const [etaEffective, setEtaEffective] = useState<number | ''>('');
+  const [isLowTemp35, setIsLowTemp35] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [hasCalculated, setHasCalculated] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const { ref: sectionRef, isVisible: sectionVisible } = useScrollAnimation();
   const { ref: resultRef, isVisible: resultVisible } = useScrollAnimation();
 
-  const handleCalculate = () => {
-    setHasCalculated(true);
-  };
-
   const invalidate = () => {
     setHasCalculated(false);
     setShowDetails(false);
+    setValidationErrors([]);
   };
 
   // Get selected pump type
   const selectedPump = heatPumpTypes.find(p => p.id === selectedPumpId) || heatPumpTypes[4];
+  const isAirWaterElectric = selectedPump.id === AIR_WATER_ELECTRIC_ID;
+  const pumpRequirements = getPumpApplicationRequirements(selectedPump, isLowTemp35);
+
+  const handleCalculate = () => {
+    const errors: string[] = [];
+
+    if (powerKw === '') {
+      errors.push('Inserisci la potenza Prated (kW).');
+    }
+
+    if (scop === '') {
+      errors.push('Inserisci lo SCOP clima average dalla scheda tecnica.');
+    } else if (scop < pumpRequirements.scopMin) {
+      errors.push(`SCOP inferiore al minimo Ecodesign (${pumpRequirements.scopMin.toFixed(3)}).`);
+    }
+
+    if (etaEffective === '') {
+      errors.push('Inserisci eta_s effettivo dalla scheda tecnica.');
+    } else if (etaEffective < pumpRequirements.etaMin) {
+      errors.push(`eta_s effettivo inferiore al minimo Ecodesign (${pumpRequirements.etaMin}%).`);
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setHasCalculated(false);
+      return;
+    }
+
+    setValidationErrors([]);
+    setHasCalculated(true);
+  };
 
   // Get climate zone based on selected province
   const selectedZone = getZoneByProvince(selectedProvince) || climateZones[4]; // Default to E
@@ -54,11 +90,15 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
     selectedZone,
     powerKw === '' ? 0 : powerKw,
     scop === '' ? 0 : scop,
-    etaEffective === '' ? 0 : etaEffective
+    etaEffective === '' ? 0 : etaEffective,
+    {
+      scopMin: pumpRequirements.scopMin,
+      etaMin: pumpRequirements.etaMin,
+    }
   );
 
   // Power threshold indicator
-  const powerThreshold = powerKw !== '' && powerKw <= 35 ? '≤ 35 kW' : '> 35 kW';
+  const powerThreshold = powerKw !== '' && powerKw <= 35 ? '<= 35 kW' : '> 35 kW';
 
   return (
     <section id="calculator" className="py-20 lg:py-32 bg-muted/30 relative overflow-hidden">
@@ -100,7 +140,16 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 {/* Heat Pump Type Dropdown */}
                 <div className="space-y-2">
                   <Label htmlFor="pump-type">Tipo di Pompa di Calore</Label>
-                  <Select value={selectedPumpId} onValueChange={(v) => { setSelectedPumpId(v); invalidate(); }}>
+                  <Select
+                    value={selectedPumpId}
+                    onValueChange={(v) => {
+                      setSelectedPumpId(v);
+                      if (v !== AIR_WATER_ELECTRIC_ID) {
+                        setIsLowTemp35(false);
+                      }
+                      invalidate();
+                    }}
+                  >
                     <SelectTrigger id="pump-type" className="w-full">
                       <SelectValue placeholder="Seleziona tipo" />
                     </SelectTrigger>
@@ -114,6 +163,28 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                   </Select>
                   <p className="text-xs text-muted-foreground">{selectedPump.commercialName}</p>
                 </div>
+                {isAirWaterElectric && (
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="is-low-temp-35"
+                        checked={isLowTemp35}
+                        onCheckedChange={(checked) => {
+                          setIsLowTemp35(checked === true);
+                          invalidate();
+                        }}
+                      />
+                      <Label htmlFor="is-low-temp-35" className="cursor-pointer text-sm leading-relaxed">
+                        <span> Impianto a bassa Temperatura &lt; 35&nbsp;°C
+                        <br />
+                        <span className="font-normal text-muted-foreground">
+                          (es. Pannelli Radianti a Pavimento)
+                        </span>
+                      </span>
+                      </Label>
+                    </div>
+                  </div>
+                )}
 
                 {/* Province Selection */}
                 <div className="space-y-2">
@@ -159,10 +230,28 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                   </div>
                 </div>
 
-                {/* SCOP and ηs min row */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* SCOP and eta_s min row */}
+                <div className="grid grid-cols-2 items-end gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="scop">SCOP (da scheda tecnica)</Label>
+                    <div className="flex min-h-5 items-center gap-2">
+                      <Label htmlFor="scop">{pumpRequirements.scopLabel}</Label>
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              className="inline-flex h-4 w-4 items-center justify-center rounded-sm p-0 leading-none text-muted-foreground transition-colors hover:text-foreground"
+                              aria-label="Indicazioni SCOP"
+                            >
+                              <Info className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-xs leading-relaxed">{SCOP_TOOLTIP_TEXT}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Input
                       id="scop"
                       type="number"
@@ -178,18 +267,20 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="eta-min">ηs min Ecodesign (%)</Label>
+                    <div className="flex min-h-5 items-center">
+                      <Label htmlFor="eta-min">ηs min Ecodesign (%)</Label>
+                    </div>
                     <Input
                       id="eta-min"
                       type="number"
-                      value={selectedPump.etaMin}
-                      disabled
+                      value={pumpRequirements.etaMin}
+                      readOnly
                       className="bg-muted"
                     />
                   </div>
                 </div>
 
-                {/* ηs effective */}
+                {/* eta_s effective */}
                 <div className="space-y-2">
                   <Label htmlFor="eta-effective">ηs effettivo (% da scheda tecnica)</Label>
                   <Input
@@ -208,6 +299,15 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 </div>
 
                 <div className="pt-2">
+                  {validationErrors.length > 0 && (
+                    <div className="mb-3 space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3" role="alert">
+                      {validationErrors.map((error) => (
+                        <p key={error} className="text-xs text-destructive">
+                          {error}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                   <Button
                     onClick={handleCalculate}
                     className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
@@ -273,7 +373,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     <div className="grid grid-cols-1 gap-3">
                       <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
                         <span className="text-muted-foreground">Incentivo Annuo (Ia,tot)</span>
-                        <span className="font-semibold">€ {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
+                        <span className="font-semibold">EUR {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
                       </div>
                       <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
                         <span className="text-muted-foreground">Calore totale (Qu)</span>
@@ -319,12 +419,12 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
                             <p className="text-muted-foreground text-xs">Ci</p>
                             <p className="font-bold text-lg">{result.ci.toFixed(3)}</p>
-                            <p className="text-xs text-muted-foreground">€/kWht</p>
+                            <p className="text-xs text-muted-foreground">EUR/kWht</p>
                           </div>
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
                             <p className="text-muted-foreground text-xs">kp</p>
                             <p className="font-bold text-lg">{result.kp.toFixed(3)}</p>
-                            <p className="text-xs text-muted-foreground">premialità</p>
+                            <p className="text-xs text-muted-foreground">premialita</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-sm">
@@ -334,14 +434,14 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                             <p className="text-xs text-muted-foreground">Ecodesign</p>
                           </div>
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
-                            <p className="text-muted-foreground text-xs">ηs min</p>
+                            <p className="text-muted-foreground text-xs">eta_s min</p>
                             <p className="font-bold text-lg">{result.etaMin}%</p>
                             <p className="text-xs text-muted-foreground">Ecodesign</p>
                           </div>
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
-                            <p className="text-muted-foreground text-xs">Annualità di calcolo</p>
+                            <p className="text-muted-foreground text-xs">Annualita di calcolo</p>
                             <p className="font-bold text-lg">{result.annualitaCalcolo}</p>
-                            <p className="text-xs text-muted-foreground">{powerKw <= 35 ? '≤35kW' : '>35kW'}</p>
+                            <p className="text-xs text-muted-foreground">{powerKw <= 35 ? '<=35kW' : '>35kW'}</p>
                           </div>
                         </div>
                       </>
@@ -364,7 +464,8 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     </a>
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
-                    *Stima indicativa basata su D.M. 7 agosto 2025. Contattaci per una valutazione tecnica specifica.
+                    <span className="block">*Stima indicativa basata su D.M. 7 agosto 2025.</span>
+                    <span className="block">Contattaci per una valutazione tecnica specifica.</span>
                   </p>
                 </div>
               </CardContent>
@@ -375,3 +476,4 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
     </section>
   );
 }
+

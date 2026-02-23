@@ -7,7 +7,7 @@ interface WhatsAppButtonProps {
 
 export function WhatsAppButton({ 
   phoneNumber = '393518134091', 
-  message = 'Ciao! Sono un installatore: mi serve una verifica rapida sugli incentivi Conto Termico 3.0 per una pompa di calore.' 
+  message = 'Ciao! Vorrei informazioni sul Conto Termico 3.0 per:' 
 }: WhatsAppButtonProps) {
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -18,6 +18,7 @@ export function WhatsAppButton({
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 group"
+      style={{ right: 'calc(1.5rem + var(--removed-body-scroll-bar-size, 0px))' }}
       aria-label="Contattaci su WhatsApp"
     >
       <div className="relative">
