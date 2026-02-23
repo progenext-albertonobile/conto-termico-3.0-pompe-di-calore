@@ -74,8 +74,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Roboto", "ui-sans-serif", "system-ui"],
-        display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ["Roboto", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif"],
+        display: ["Roboto", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -87,12 +87,12 @@ export default {
           to: { height: "0" },
         },
         "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
         "fade-out": {
-          "0%": { opacity: "1", transform: "translateY(0)" },
-          "100%": { opacity: "0", transform: "translateY(10px)" },
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
         },
         "scale-in": {
           "0%": { transform: "scale(0.95)", opacity: "0" },

@@ -24,8 +24,16 @@ interface CalculatorSectionProps {
 }
 
 const AIR_WATER_ELECTRIC_ID = 'aria-acqua';
+const WATER_WATER_ID = 'acqua-acqua';
+const LOW_TEMP_CHECKBOX_PUMP_IDS = new Set([AIR_WATER_ELECTRIC_ID, WATER_WATER_ID]);
 const SCOP_TOOLTIP_TEXT =
-  'Inserisci lo SCOP "clima average" dalla scheda tecnica del produttore. Radiatori/Ventilconvettori -> 55C (lascia la spunta OFF). Pavimento radiante -> 35C (spunta ON).';
+  'Inserire lo SCOP "clima average" dalla scheda tecnica del produttore coerente con la temperatura scelta (35 / 55 \u00B0C).\nIn mancanza di dati specifici usare calcolo di default a Media Temperatura (55 \u00B0C) e togliere la spunta nel Tipo di pompa di calore.';
+const numericInputBehavior = {
+  autoComplete: 'new-password',
+  autoCorrect: 'off',
+  spellCheck: false,
+  inputMode: 'decimal' as const,
+};
 
 export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
   const [selectedPumpId, setSelectedPumpId] = useState<string>(heatPumpTypes[4].id); // Default: Aria/Acqua
@@ -49,7 +57,8 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
 
   // Get selected pump type
   const selectedPump = heatPumpTypes.find(p => p.id === selectedPumpId) || heatPumpTypes[4];
-  const isAirWaterElectric = selectedPump.id === AIR_WATER_ELECTRIC_ID;
+  const supportsLowTempCheckbox = LOW_TEMP_CHECKBOX_PUMP_IDS.has(selectedPump.id);
+  const showScopTooltip = supportsLowTempCheckbox;
   const pumpRequirements = getPumpApplicationRequirements(selectedPump, isLowTemp35);
 
   const handleCalculate = () => {
@@ -144,7 +153,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     value={selectedPumpId}
                     onValueChange={(v) => {
                       setSelectedPumpId(v);
-                      if (v !== AIR_WATER_ELECTRIC_ID) {
+                      if (!LOW_TEMP_CHECKBOX_PUMP_IDS.has(v)) {
                         setIsLowTemp35(false);
                       }
                       invalidate();
@@ -163,7 +172,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                   </Select>
                   <p className="text-xs text-muted-foreground">{selectedPump.commercialName}</p>
                 </div>
-                {isAirWaterElectric && (
+                {supportsLowTempCheckbox && (
                   <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
                     <div className="flex items-start gap-3">
                       <Checkbox
@@ -176,8 +185,8 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       />
                       <Label htmlFor="is-low-temp-35" className="cursor-pointer text-sm leading-relaxed">
                         <span> Impianto a bassa Temperatura &lt; 35&nbsp;°C
-                        <br />
-                        <span className="font-normal text-muted-foreground">
+                        <span className="block font-normal text-muted-foreground">
+                        
                           (es. Pannelli Radianti a Pavimento)
                         </span>
                       </span>
@@ -213,6 +222,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     <Input
                       id="power"
                       type="number"
+                      {...numericInputBehavior}
                       min={1}
                       max={1000}
                       step={0.1}
@@ -222,9 +232,12 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                         setPowerKw(next);
                         invalidate();
                       }}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     />
-                    <Badge variant={powerKw !== '' && powerKw <= 35 ? "secondary" : "default"}>
+                    <Badge
+                      variant={powerKw !== '' && powerKw <= 35 ? "secondary" : "default"}
+                      className="w-20 shrink-0 justify-center tabular-nums"
+                    >
                       {powerThreshold}
                     </Badge>
                   </div>
@@ -235,26 +248,29 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                   <div className="space-y-2">
                     <div className="flex min-h-5 items-center gap-2">
                       <Label htmlFor="scop">{pumpRequirements.scopLabel}</Label>
-                      <TooltipProvider delayDuration={100}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex h-4 w-4 items-center justify-center rounded-sm p-0 leading-none text-muted-foreground transition-colors hover:text-foreground"
-                              aria-label="Indicazioni SCOP"
-                            >
-                              <Info className="h-4 w-4" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs">
-                            <p className="text-xs leading-relaxed">{SCOP_TOOLTIP_TEXT}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {showScopTooltip && (
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex h-4 w-4 items-center justify-center rounded-sm p-0 leading-none text-muted-foreground transition-colors hover:text-foreground"
+                                aria-label="Indicazioni SCOP"
+                              >
+                                <Info className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="text-xs leading-relaxed whitespace-pre-line">{SCOP_TOOLTIP_TEXT}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     <Input
                       id="scop"
                       type="number"
+                      {...numericInputBehavior}
                       min={1}
                       max={10}
                       step={0.01}
@@ -273,6 +289,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     <Input
                       id="eta-min"
                       type="number"
+                      {...numericInputBehavior}
                       value={pumpRequirements.etaMin}
                       readOnly
                       className="bg-muted"
@@ -286,6 +303,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                   <Input
                     id="eta-effective"
                     type="number"
+                    {...numericInputBehavior}
                     min={1}
                     max={300}
                     step={1}
@@ -476,4 +494,3 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
     </section>
   );
 }
-

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +5,17 @@
 /* Bold & Dynamic Energy Consulting Design System */
 
 @layer base {
+  html.font-loading body {
+    visibility: hidden;
+  }
+
+  html.font-loading *,
+  html.font-loading *::before,
+  html.font-loading *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
   :root {
     /* Bold electric blue palette with energetic orange accents */
     --background: 220 20% 97%;
@@ -115,6 +124,9 @@
 
   html {
     scroll-behavior: smooth;
+    font-synthesis: none;
+    font-synthesis-weight: none;
+    font-synthesis-style: none;
   }
 }
 
@@ -194,46 +206,46 @@
   /* Scroll-triggered animations */
   .animate-on-scroll {
     opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    transition: opacity 0.35s ease-out;
   }
 
   .animate-on-scroll.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 
   .animate-on-scroll-left {
     opacity: 0;
-    transform: translateX(-50px);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    transition: opacity 0.35s ease-out;
   }
 
   .animate-on-scroll-left.visible {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 
   .animate-on-scroll-right {
     opacity: 0;
-    transform: translateX(50px);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    transition: opacity 0.35s ease-out;
   }
 
   .animate-on-scroll-right.visible {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 
   .animate-on-scroll-scale {
     opacity: 0;
-    transform: scale(0.9);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: none;
+    transition: opacity 0.35s ease-out;
   }
 
   .animate-on-scroll-scale.visible {
     opacity: 1;
-    transform: scale(1);
+    transform: none;
   }
 
   /* Stagger children animations */
