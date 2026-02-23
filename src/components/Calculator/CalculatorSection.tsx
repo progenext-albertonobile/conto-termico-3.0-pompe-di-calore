@@ -8,13 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Calculator, Info, TrendingUp, Euro, MapPin, ChevronDown, Zap } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { 
-  heatPumpTypes, 
-  climateZones, 
-  provinces, 
-  getZoneByProvince, 
-  calculateIncentive, 
-  type HeatPumpType 
+import {
+  heatPumpTypes,
+  climateZones,
+  provinces,
+  getZoneByProvince,
+  calculateIncentive,
+  type HeatPumpType
 } from './calculatorData';
 
 interface CalculatorSectionProps {
@@ -23,14 +23,24 @@ interface CalculatorSectionProps {
 
 export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
   const [selectedPumpId, setSelectedPumpId] = useState<string>(heatPumpTypes[4].id); // Default: Aria/Acqua
-  const [selectedProvince, setSelectedProvince] = useState<string>("Bologna");
-  const [powerKw, setPowerKw] = useState<number>(10);
-  const [scop, setScop] = useState<number>(3.68);
-  const [etaEffective, setEtaEffective] = useState<number>(115);
+  const [selectedProvince, setSelectedProvince] = useState<string>('Bologna');
+  const [powerKw, setPowerKw] = useState<number | ''>('');
+  const [scop, setScop] = useState<number | ''>('');
+  const [etaEffective, setEtaEffective] = useState<number | ''>('');
   const [showDetails, setShowDetails] = useState(false);
-  
+  const [hasCalculated, setHasCalculated] = useState(false);
+
   const { ref: sectionRef, isVisible: sectionVisible } = useScrollAnimation();
   const { ref: resultRef, isVisible: resultVisible } = useScrollAnimation();
+
+  const handleCalculate = () => {
+    setHasCalculated(true);
+  };
+
+  const invalidate = () => {
+    setHasCalculated(false);
+    setShowDetails(false);
+  };
 
   // Get selected pump type
   const selectedPump = heatPumpTypes.find(p => p.id === selectedPumpId) || heatPumpTypes[4];
@@ -39,10 +49,16 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
   const selectedZone = getZoneByProvince(selectedProvince) || climateZones[4]; // Default to E
 
   // Calculate results
-  const result = calculateIncentive(selectedPump, selectedZone, powerKw, scop, etaEffective);
+  const result = calculateIncentive(
+    selectedPump,
+    selectedZone,
+    powerKw === '' ? 0 : powerKw,
+    scop === '' ? 0 : scop,
+    etaEffective === '' ? 0 : etaEffective
+  );
 
   // Power threshold indicator
-  const powerThreshold = powerKw <= 35 ? '≤ 35 kW' : '> 35 kW';
+  const powerThreshold = powerKw !== '' && powerKw <= 35 ? '≤ 35 kW' : '> 35 kW';
 
   return (
     <section id="calculator" className="py-20 lg:py-32 bg-muted/30 relative overflow-hidden">
@@ -76,7 +92,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Zap className="w-5 h-5 text-primary" />
-                  Dati Impianto
+                  Dati Pompa di Calore
                 </CardTitle>
                 <CardDescription>Inserisci i dati tecnici della pompa di calore</CardDescription>
               </CardHeader>
@@ -84,7 +100,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 {/* Heat Pump Type Dropdown */}
                 <div className="space-y-2">
                   <Label htmlFor="pump-type">Tipo di Pompa di Calore</Label>
-                  <Select value={selectedPumpId} onValueChange={setSelectedPumpId}>
+                  <Select value={selectedPumpId} onValueChange={(v) => { setSelectedPumpId(v); invalidate(); }}>
                     <SelectTrigger id="pump-type" className="w-full">
                       <SelectValue placeholder="Seleziona tipo" />
                     </SelectTrigger>
@@ -105,7 +121,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     <MapPin className="w-4 h-4 text-primary" />
                     Provincia
                   </Label>
-                  <Select value={selectedProvince} onValueChange={setSelectedProvince}>
+                  <Select value={selectedProvince} onValueChange={(v) => { setSelectedProvince(v); invalidate(); }}>
                     <SelectTrigger id="province" className="w-full">
                       <SelectValue placeholder="Seleziona provincia" />
                     </SelectTrigger>
@@ -117,15 +133,6 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       ))}
                     </SelectContent>
                   </Select>
-                  
-                  {/* Auto-detected climate zone */}
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
-                    <Info className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-sm">
-                      Zona Climatica: <span className="font-bold text-primary">{selectedZone.name}</span>
-                      <span className="text-muted-foreground"> (Quf = {selectedZone.quf} ore/anno)</span>
-                    </span>
-                  </div>
                 </div>
 
                 {/* Power Input - FREE NUMBER */}
@@ -139,16 +146,17 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       max={1000}
                       step={0.1}
                       value={powerKw}
-                      onChange={(e) => setPowerKw(Math.max(1, parseFloat(e.target.value) || 1))}
+                      onChange={(e) => {
+                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
+                        setPowerKw(next);
+                        invalidate();
+                      }}
                       className="flex-1"
                     />
-                    <Badge variant={powerKw <= 35 ? "secondary" : "default"}>
+                    <Badge variant={powerKw !== '' && powerKw <= 35 ? "secondary" : "default"}>
                       {powerThreshold}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {powerKw <= 35 ? '2 rate annuali' : '5 rate annuali'}
-                  </p>
                 </div>
 
                 {/* SCOP and ηs min row */}
@@ -162,7 +170,11 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       max={10}
                       step={0.01}
                       value={scop}
-                      onChange={(e) => setScop(Math.max(1, parseFloat(e.target.value) || 1))}
+                      onChange={(e) => {
+                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
+                        setScop(next);
+                        invalidate();
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
@@ -187,8 +199,25 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     max={300}
                     step={1}
                     value={etaEffective}
-                    onChange={(e) => setEtaEffective(Math.max(1, parseFloat(e.target.value) || 1))}
+                      onChange={(e) => {
+                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
+                        setEtaEffective(next);
+                        invalidate();
+                      }}
                   />
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    onClick={handleCalculate}
+                    className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
+                  >
+                    <Calculator className="w-5 h-5 mr-2" />
+                    Calcola Incentivo
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Premi per visualizzare la stima nel riquadro a destra.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -212,34 +241,51 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
               </div>
               
               <CardContent className="p-6 space-y-6">
-                {/* Main Result - INCENTIVO TOTALE */}
-                <div className="text-center p-6 rounded-xl bg-success/10 border-2 border-success/30">
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Incentivo Totale ({result.annualita} annualità)
-                  </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <Euro className="w-8 h-8 text-success" />
-                    <span className="text-4xl sm:text-5xl font-bold text-success">
-                      {result.totalIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+                {!hasCalculated ? (
+                  <div className="text-center p-6 rounded-xl bg-muted/30 border border-border">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Per visualizzare la stima, premi:
+                    </p>
+                    <Button
+                      onClick={handleCalculate}
+                      className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
+                    >
+                      <Calculator className="w-5 h-5 mr-2" />
+                      Calcola Incentivo
+                    </Button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    {/* Main Result - INCENTIVO TOTALE */}
+                    <div className="text-center p-6 rounded-xl bg-success/10 border-2 border-success/30">
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Incentivo Totale ({result.rateErogazione === 1 ? 'rata unica' : `${result.rateErogazione} rate`})
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <Euro className="w-8 h-8 text-success" />
+                        <span className="text-4xl sm:text-5xl font-bold text-success">
+                          {result.totalIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Secondary Results */}
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                    <span className="text-muted-foreground">Incentivo Annuo (Ia,tot)</span>
-                    <span className="font-semibold">€ {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                    <span className="text-muted-foreground">Calore totale (Qu)</span>
-                    <span className="font-semibold">{result.qu.toLocaleString('it-IT')} kWht</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                    <span className="text-muted-foreground">Energia incentivata (Ei)</span>
-                    <span className="font-semibold">{result.ei.toLocaleString('it-IT', { minimumFractionDigits: 2 })} kWht</span>
-                  </div>
-                </div>
+                    {/* Secondary Results */}
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
+                        <span className="text-muted-foreground">Incentivo Annuo (Ia,tot)</span>
+                        <span className="font-semibold">€ {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
+                      </div>
+                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
+                        <span className="text-muted-foreground">Calore totale (Qu)</span>
+                        <span className="font-semibold">{result.qu.toLocaleString('it-IT')} kWht</span>
+                      </div>
+                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
+                        <span className="text-muted-foreground">Energia incentivata (Ei)</span>
+                        <span className="font-semibold">{result.ei.toLocaleString('it-IT', { minimumFractionDigits: 2 })} kWht</span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* Coefficients Section - Collapsible */}
                 <Collapsible open={showDetails} onOpenChange={setShowDetails}>
@@ -250,40 +296,56 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-2 pt-2">
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">Quf</p>
-                        <p className="font-bold text-lg">{result.quf}</p>
-                        <p className="text-xs text-muted-foreground">ore/anno</p>
-                      </div>
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">Ci</p>
-                        <p className="font-bold text-lg">{result.ci.toFixed(3)}</p>
-                        <p className="text-xs text-muted-foreground">€/kWht</p>
-                      </div>
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">kp</p>
-                        <p className="font-bold text-lg">{result.kp.toFixed(3)}</p>
-                        <p className="text-xs text-muted-foreground">premialità</p>
-                      </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                      <Info className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm">
+                        Zona Climatica: <span className="font-bold text-primary">{selectedZone.name}</span>
+                        <span className="text-muted-foreground"> (Quf = {selectedZone.quf} ore/anno)</span>
+                      </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">SCOP min</p>
-                        <p className="font-bold text-lg">{result.scopMin.toFixed(3)}</p>
-                        <p className="text-xs text-muted-foreground">Ecodesign</p>
-                      </div>
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">ηs min</p>
-                        <p className="font-bold text-lg">{result.etaMin}%</p>
-                        <p className="text-xs text-muted-foreground">Ecodesign</p>
-                      </div>
-                      <div className="p-3 bg-muted/30 rounded-lg text-center">
-                        <p className="text-muted-foreground text-xs">Annualità</p>
-                        <p className="font-bold text-lg">{result.annualita}</p>
-                        <p className="text-xs text-muted-foreground">{powerKw <= 35 ? '≤35kW' : '>35kW'}</p>
-                      </div>
-                    </div>
+
+                    {!hasCalculated ? (
+                      <p className="text-sm text-muted-foreground px-1 pt-2">
+                        Premi <span className="font-semibold">Calcola Incentivo</span> per visualizzare i fattori.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-3 gap-2 text-sm">
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">Quf</p>
+                            <p className="font-bold text-lg">{result.quf}</p>
+                            <p className="text-xs text-muted-foreground">ore/anno</p>
+                          </div>
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">Ci</p>
+                            <p className="font-bold text-lg">{result.ci.toFixed(3)}</p>
+                            <p className="text-xs text-muted-foreground">€/kWht</p>
+                          </div>
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">kp</p>
+                            <p className="font-bold text-lg">{result.kp.toFixed(3)}</p>
+                            <p className="text-xs text-muted-foreground">premialità</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-sm">
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">SCOP min</p>
+                            <p className="font-bold text-lg">{result.scopMin.toFixed(3)}</p>
+                            <p className="text-xs text-muted-foreground">Ecodesign</p>
+                          </div>
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">ηs min</p>
+                            <p className="font-bold text-lg">{result.etaMin}%</p>
+                            <p className="text-xs text-muted-foreground">Ecodesign</p>
+                          </div>
+                          <div className="p-3 bg-muted/30 rounded-lg text-center">
+                            <p className="text-muted-foreground text-xs">Annualità di calcolo</p>
+                            <p className="font-bold text-lg">{result.annualitaCalcolo}</p>
+                            <p className="text-xs text-muted-foreground">{powerKw <= 35 ? '≤35kW' : '>35kW'}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
 
@@ -302,7 +364,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     </a>
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
-                    *Stima indicativa basata su D.M. 7 agosto 2025. Il calcolo definitivo dipende dalla valutazione tecnica.
+                    *Stima indicativa basata su D.M. 7 agosto 2025. Contattaci per una valutazione tecnica specifica.
                   </p>
                 </div>
               </CardContent>

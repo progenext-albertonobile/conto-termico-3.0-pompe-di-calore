@@ -3,8 +3,27 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
-const Dialog = DialogPrimitive.Root;
+// Wrapper per Dialog che gestisce il scroll-lock
+const DialogRoot = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>
+>(({ open, onOpenChange, ...props }, ref) => {
+  useScrollLock(open ?? false);
+  
+  return (
+    <DialogPrimitive.Root 
+      ref={ref}
+      open={open} 
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+});
+DialogRoot.displayName = "Dialog";
+
+const Dialog = DialogRoot;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 

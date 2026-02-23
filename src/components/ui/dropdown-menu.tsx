@@ -3,8 +3,27 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
-const DropdownMenu = DropdownMenuPrimitive.Root;
+// Wrapper per DropdownMenu che gestisce il scroll-lock
+const DropdownMenuRoot = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>
+>(({ open, onOpenChange, ...props }, ref) => {
+  useScrollLock(open ?? false);
+  
+  return (
+    <DropdownMenuPrimitive.Root 
+      ref={ref}
+      open={open} 
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+});
+DropdownMenuRoot.displayName = "DropdownMenu";
+
+const DropdownMenu = DropdownMenuRoot;
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 

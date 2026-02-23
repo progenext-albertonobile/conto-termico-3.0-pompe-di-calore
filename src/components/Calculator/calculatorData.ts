@@ -318,7 +318,8 @@ export interface IncentiveResult {
   kp: number; // Premium coefficient (ηs / ηs,min)
   ci: number; // Valorization coefficient
   quf: number; // Zone usage factor
-  annualita: number; // Number of installments (2 or 5)
+  annualitaCalcolo: number; // 2 o 5 (in base alla potenza / regola tecnica)
+  rateErogazione: number;   // 1 se I_tot <= 15000€, altrimenti = annualitaCalcolo
   
   // Incentive amounts
   annualIncentive: number; // Ia,tot = Ei × Ci
@@ -347,8 +348,7 @@ export function calculateIncentive(
   const etaMin = pumpType.etaMin;
   
   // Calculate kp = ηs / ηs,min (premium coefficient)
-  // Capped at a reasonable maximum (e.g., 1.5)
-  const kp = Math.min(etaEffective / etaMin, 1.5);
+  const kp = etaEffective / etaMin;
   
   // Calculate Ei = Qu × (1 - 1/SCOP) × kp (incentivized thermal energy)
   const ei = qu * (1 - 1 / scop) * kp;
@@ -360,10 +360,13 @@ export function calculateIncentive(
   const annualIncentive = ei * ci;
   
   // Determine number of installments: 2 if ≤35kW, 5 if >35kW
-  const annualita = powerKw <= 35 ? 2 : 5;
+  const annualitaCalcolo = powerKw <= 35 ? 2 : 5;
   
   // Calculate total incentive: I,tot = Ia,tot × Annualita
-  const totalIncentive = annualIncentive * annualita;
+  const totalIncentive = annualIncentive * annualitaCalcolo;
+  
+  // Regola rata unica (privati/imprese): <= 15.000€ → 1 rata
+  const rateErogazione = totalIncentive <= 15000 ? 1 : annualitaCalcolo;
   
   return {
     qu: Math.round(qu * 100) / 100,
@@ -371,7 +374,8 @@ export function calculateIncentive(
     kp: Math.round(kp * 1000) / 1000,
     ci,
     quf,
-    annualita,
+    annualitaCalcolo,
+    rateErogazione,
     annualIncentive: Math.round(annualIncentive * 100) / 100,
     totalIncentive: Math.round(totalIncentive * 100) / 100,
     scopMin,

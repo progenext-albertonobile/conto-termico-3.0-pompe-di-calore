@@ -2,8 +2,27 @@ import * as React from "react";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
-const HoverCard = HoverCardPrimitive.Root;
+// Wrapper per HoverCard che gestisce il scroll-lock
+const HoverCardRoot = React.forwardRef<
+  React.ElementRef<typeof HoverCardPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Root>
+>(({ open, onOpenChange, ...props }, ref) => {
+  useScrollLock(open ?? false);
+  
+  return (
+    <HoverCardPrimitive.Root 
+      ref={ref}
+      open={open} 
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+});
+HoverCardRoot.displayName = "HoverCard";
+
+const HoverCard = HoverCardRoot;
 
 const HoverCardTrigger = HoverCardPrimitive.Trigger;
 

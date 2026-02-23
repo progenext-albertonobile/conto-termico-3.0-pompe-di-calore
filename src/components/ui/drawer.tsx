@@ -2,11 +2,29 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
-const Drawer = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
-);
-Drawer.displayName = "Drawer";
+// Wrapper per Drawer che gestisce il scroll-lock
+const DrawerRoot = ({ 
+  shouldScaleBackground = true, 
+  open,
+  onOpenChange,
+  ...props 
+}: React.ComponentProps<typeof DrawerPrimitive.Root> & { open?: boolean; onOpenChange?: (open: boolean) => void }) => {
+  useScrollLock(open ?? false);
+  
+  return (
+    <DrawerPrimitive.Root 
+      shouldScaleBackground={shouldScaleBackground} 
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props} 
+    />
+  );
+};
+DrawerRoot.displayName = "Drawer";
+
+const Drawer = DrawerRoot;
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
 
