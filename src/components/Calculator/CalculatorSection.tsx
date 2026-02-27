@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Calculator, Info, TrendingUp, Euro, MapPin, ChevronDown, Zap } from 'lucide-react';
+import { Calculator, Info, TrendingUp, Euro, MapPin, ChevronDown, Zap, FileText } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import {
   heatPumpTypes,
@@ -75,9 +75,9 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
     }
 
     if (etaEffective === '') {
-      errors.push('Inserisci eta_s effettivo dalla scheda tecnica.');
+      errors.push('Inserisci ηs  effettivo dalla scheda tecnica.');
     } else if (etaEffective < pumpRequirements.etaMin) {
-      errors.push(`eta_s effettivo inferiore al minimo Ecodesign (${pumpRequirements.etaMin}%).`);
+      errors.push(`ηs  effettivo inferiore al minimo Ecodesign (${pumpRequirements.etaMin}%).`);
     }
 
     if (errors.length > 0) {
@@ -108,9 +108,14 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
 
   // Power threshold indicator
   const powerThreshold = powerKw !== '' && powerKw <= 35 ? '<= 35 kW' : '> 35 kW';
+  const datasheetMailto = `mailto:contotermico@progenext.it?subject=${encodeURIComponent(
+    'CT3.0 – Calcolo incentivo su scheda tecnica (Installatore)'
+  )}&body=${encodeURIComponent(
+    'Ciao Progenext,\n\nIn allegato invio la scheda tecnica della pompa di calore.\n\nDati rapidi (se disponibili):\n- Provincia / zona impianto:\n- Potenza Prated (kW):\n- SCOP:\n- ηs effettivo (%):\n\nObiettivo:\n- Ricevere un report incentivo pronto da inoltrare al cliente.\n\nGrazie,\n[NOME] – [AZIENDA] – [TELEFONO]'
+  )}`;
 
   return (
-    <section id="calculator" className="py-20 lg:py-32 bg-muted/30 relative overflow-hidden">
+    <section id="calculator" className="py-12 lg:py-16 bg-muted/30 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -119,7 +124,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
         {/* Section Header */}
         <div
           ref={sectionRef}
-          className={`text-center mb-12 lg:mb-16 animate-on-scroll ${sectionVisible ? 'visible' : ''}`}
+          className={`text-center mb-8 lg:mb-10 animate-on-scroll ${sectionVisible ? 'visible' : ''}`}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Calculator className="w-4 h-4" />
@@ -133,7 +138,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {/* Calculator Form */}
           <div className="space-y-6">
             {/* DATI IMPIANTO */}
@@ -146,31 +151,56 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 <CardDescription>Inserisci i dati tecnici della pompa di calore</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-                {/* Heat Pump Type Dropdown */}
-                <div className="space-y-2">
-                  <Label htmlFor="pump-type">Tipo di Pompa di Calore</Label>
-                  <Select
-                    value={selectedPumpId}
-                    onValueChange={(v) => {
-                      setSelectedPumpId(v);
-                      if (!LOW_TEMP_CHECKBOX_PUMP_IDS.has(v)) {
-                        setIsLowTemp35(false);
-                      }
-                      invalidate();
-                    }}
-                  >
-                    <SelectTrigger id="pump-type" className="w-full">
-                      <SelectValue placeholder="Seleziona tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {heatPumpTypes.map((pump) => (
-                        <SelectItem key={pump.id} value={pump.id}>
-                          {pump.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">{selectedPump.commercialName}</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Heat Pump Type Dropdown */}
+                  <div className="space-y-2">
+                    <Label htmlFor="pump-type">Tipo di Pompa di Calore</Label>
+                    <Select
+                      value={selectedPumpId}
+                      onValueChange={(v) => {
+                        setSelectedPumpId(v);
+                        if (!LOW_TEMP_CHECKBOX_PUMP_IDS.has(v)) {
+                          setIsLowTemp35(false);
+                        }
+                        invalidate();
+                      }}
+                    >
+                      <SelectTrigger id="pump-type" className="w-full text-left [&>span]:text-left">
+                        <SelectValue placeholder="Seleziona tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {heatPumpTypes.map((pump) => (
+                          <SelectItem key={pump.id} value={pump.id} className="text-left">
+                            {pump.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="min-h-4 text-xs text-muted-foreground">{selectedPump.commercialName}</p>
+                  </div>
+
+                  {/* Province Selection */}
+                  <div className="space-y-2">
+                    <Label htmlFor="province" className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      Provincia
+                    </Label>
+                    <Select value={selectedProvince} onValueChange={(v) => { setSelectedProvince(v); invalidate(); }}>
+                      <SelectTrigger id="province" className="w-full text-left [&>span]:text-left">
+                        <SelectValue placeholder="Seleziona provincia" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {provinces.map((province) => (
+                          <SelectItem key={province.name} value={province.name} className="text-left">
+                            {province.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="min-h-4 text-xs text-transparent" aria-hidden="true">
+                      &nbsp;
+                    </p>
+                  </div>
                 </div>
                 {supportsLowTempCheckbox && (
                   <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
@@ -184,9 +214,8 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                         }}
                       />
                       <Label htmlFor="is-low-temp-35" className="cursor-pointer text-sm leading-relaxed">
-                        <span> Impianto a bassa Temperatura &lt; 35&nbsp;°C
-                        <span className="block font-normal text-muted-foreground">
-                        
+                        <span> Impianto a bassa Temperatura &lt; 35&nbsp;&deg;C 
+                        <span className="font-normal text-muted-foreground">
                           (es. Pannelli Radianti a Pavimento)
                         </span>
                       </span>
@@ -194,57 +223,36 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     </div>
                   </div>
                 )}
-
-                {/* Province Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="province" className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    Provincia
-                  </Label>
-                  <Select value={selectedProvince} onValueChange={(v) => { setSelectedProvince(v); invalidate(); }}>
-                    <SelectTrigger id="province" className="w-full">
-                      <SelectValue placeholder="Seleziona provincia" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {provinces.map((province) => (
-                        <SelectItem key={province.name} value={province.name}>
-                          {province.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Power Input - FREE NUMBER */}
-                <div className="space-y-2">
-                  <Label htmlFor="power">Potenza Prated (kW)</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="power"
-                      type="number"
-                      {...numericInputBehavior}
-                      min={1}
-                      max={1000}
-                      step={0.1}
-                      value={powerKw}
-                      onChange={(e) => {
-                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
-                        setPowerKw(next);
-                        invalidate();
-                      }}
-                      className="flex-1 min-w-0"
-                    />
-                    <Badge
-                      variant={powerKw !== '' && powerKw <= 35 ? "secondary" : "default"}
-                      className="w-20 shrink-0 justify-center tabular-nums"
-                    >
-                      {powerThreshold}
-                    </Badge>
+                {/* Row 1: Potenza + SCOP */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="flex min-h-5 items-center">
+                      <Label htmlFor="power">Potenza Prated (kW)</Label>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="power"
+                        type="number"
+                        {...numericInputBehavior}
+                        min={1}
+                        max={1000}
+                        step={0.1}
+                        value={powerKw}
+                        onChange={(e) => {
+                          const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
+                          setPowerKw(next);
+                          invalidate();
+                        }}
+                        className="flex-1 min-w-0"
+                      />
+                      <Badge
+                        variant={powerKw !== '' && powerKw <= 35 ? "secondary" : "default"}
+                        className="w-20 shrink-0 justify-center tabular-nums"
+                      >
+                        {powerThreshold}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-
-                {/* SCOP and eta_s min row */}
-                <div className="grid grid-cols-2 items-end gap-4">
                   <div className="space-y-2">
                     <div className="flex min-h-5 items-center gap-2">
                       <Label htmlFor="scop">{pumpRequirements.scopLabel}</Label>
@@ -282,9 +290,32 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       }}
                     />
                   </div>
+                </div>
+
+                {/* Row 2: ηs  effettivo + ηs  min */}
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <div className="flex min-h-5 items-center">
-                      <Label htmlFor="eta-min">ηs min Ecodesign (%)</Label>
+                      <Label htmlFor="eta-effective">ηs  effettivo (% da scheda tecnica)</Label>
+                    </div>
+                    <Input
+                      id="eta-effective"
+                      type="number"
+                      {...numericInputBehavior}
+                      min={1}
+                      max={300}
+                      step={1}
+                      value={etaEffective}
+                      onChange={(e) => {
+                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
+                        setEtaEffective(next);
+                        invalidate();
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex min-h-5 items-center">
+                      <Label htmlFor="eta-min">ηs  min Ecodesign (%)</Label>
                     </div>
                     <Input
                       id="eta-min"
@@ -296,26 +327,6 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     />
                   </div>
                 </div>
-
-                {/* eta_s effective */}
-                <div className="space-y-2">
-                  <Label htmlFor="eta-effective">ηs effettivo (% da scheda tecnica)</Label>
-                  <Input
-                    id="eta-effective"
-                    type="number"
-                    {...numericInputBehavior}
-                    min={1}
-                    max={300}
-                    step={1}
-                    value={etaEffective}
-                      onChange={(e) => {
-                        const next = e.target.value === '' ? '' : Math.max(1, parseFloat(e.target.value) || 1);
-                        setEtaEffective(next);
-                        invalidate();
-                      }}
-                  />
-                </div>
-
                 <div className="pt-2">
                   {validationErrors.length > 0 && (
                     <div className="mb-3 space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 p-3" role="alert">
@@ -337,6 +348,21 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                     Premi per visualizzare la stima nel riquadro a destra.
                   </p>
                 </div>
+                <div className="mt-4 rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <p className="text-sm font-semibold text-foreground">
+                    Hai una scheda tecnica?
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Inviacela in PDF: ti restituiamo un calcolo verificato da un tecnico Progenext e pronto da inoltrare al cliente.
+                  </p>
+
+                  <Button asChild className="w-full mt-3 bg-progenext-teal text-white hover:opacity-90">
+                    <a href={datasheetMailto}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Invia scheda tecnica → calcolo verificato
+                    </a>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -348,7 +374,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
           >
             <Card className="shadow-bold border-0 sticky top-24 overflow-hidden">
               {/* Header */}
-              <div className="gradient-hero p-6 text-white">
+              <div className="gradient-hero p-5 text-white">
                 <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <TrendingUp className="w-6 h-6" />
                   Incentivi Conto Termico 3.0
@@ -358,7 +384,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 </CardDescription>
               </div>
               
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-5 space-y-4">
                 {!hasCalculated ? (
                   <div className="text-center p-6 rounded-xl bg-muted/30 border border-border">
                     <p className="text-sm text-muted-foreground mb-4">
@@ -384,22 +410,6 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                         <span className="text-4xl sm:text-5xl font-bold text-success">
                           {result.totalIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
-                      </div>
-                    </div>
-
-                    {/* Secondary Results */}
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                        <span className="text-muted-foreground">Incentivo Annuo (Ia,tot)</span>
-                        <span className="font-semibold">EUR {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
-                      </div>
-                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                        <span className="text-muted-foreground">Calore totale (Qu)</span>
-                        <span className="font-semibold">{result.qu.toLocaleString('it-IT')} kWht</span>
-                      </div>
-                      <div className="flex justify-between items-center py-3 px-4 bg-muted/50 rounded-lg">
-                        <span className="text-muted-foreground">Energia incentivata (Ei)</span>
-                        <span className="font-semibold">{result.ei.toLocaleString('it-IT', { minimumFractionDigits: 2 })} kWht</span>
                       </div>
                     </div>
                   </>
@@ -428,6 +438,20 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                       </p>
                     ) : (
                       <>
+                        <div className="grid grid-cols-1 gap-2 pt-2">
+                          <div className="flex justify-between items-center py-2 px-4 bg-muted/50 rounded-lg">
+                            <span className="text-muted-foreground">Incentivo Annuo (Ia,tot)</span>
+                            <span className="font-semibold">EUR {result.annualIncentive.toLocaleString('it-IT', { minimumFractionDigits: 2 })} /anno</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 px-4 bg-muted/50 rounded-lg">
+                            <span className="text-muted-foreground">Calore totale (Qu)</span>
+                            <span className="font-semibold">{result.qu.toLocaleString('it-IT')} kWht</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 px-4 bg-muted/50 rounded-lg">
+                            <span className="text-muted-foreground">Energia incentivata (Ei)</span>
+                            <span className="font-semibold">{result.ei.toLocaleString('it-IT', { minimumFractionDigits: 2 })} kWht</span>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-3 gap-2 text-sm">
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
                             <p className="text-muted-foreground text-xs">Quf</p>
@@ -452,7 +476,7 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                             <p className="text-xs text-muted-foreground">Ecodesign</p>
                           </div>
                           <div className="p-3 bg-muted/30 rounded-lg text-center">
-                            <p className="text-muted-foreground text-xs">eta_s min</p>
+                            <p className="text-muted-foreground text-xs">ηs  min</p>
                             <p className="font-bold text-lg">{result.etaMin}%</p>
                             <p className="text-xs text-muted-foreground">Ecodesign</p>
                           </div>
@@ -468,11 +492,8 @@ export function CalculatorSection({ onOpenLeadModal }: CalculatorSectionProps) {
                 </Collapsible>
 
                 {/* CTA */}
-                <div className="space-y-3 pt-4">
-                  <Button
-                    asChild
-                    className="w-full gradient-accent text-accent-foreground py-6 text-lg shadow-accent"
-                  >
+                <div className="space-y-2 pt-3">
+                  <Button asChild variant="outline" className="w-full py-5 text-base">
                     <a
                       href="/downloads/PROGENEXT_Conto_Termico_30_Guida.pdf"
                       target="_blank"
